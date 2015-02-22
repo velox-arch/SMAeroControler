@@ -16,7 +16,7 @@
 **
 */
 
-//#define DEBUG
+#define DEBUG
 
 /* γ = dev : α = canditae for control testing : β = proving ground/release candidate : λ = Final stable/RTM */
 #define PLUGIN_VERSION "1.01λ"
@@ -37,7 +37,7 @@
 #include "AeroControler\\War_Sys\\Scripts\\AC_STDWAR_Events.inc"
 #include "AeroControler\\War_Sys\\Scripts\\AC_STDWAR_Configs.inc"
 
-public Plugin:myinfo = 
+public Plugin myinfo = 
 {
 	name = "Aero Controler - Standart WARs",
 	author = "_AeonOne_",
@@ -46,7 +46,7 @@ public Plugin:myinfo =
 	url = "Julien.Kluge@gmail.com"
 };
 
-public OnPluginStart()
+public void OnPluginStart()
 {
 	DetectGameMod();
 	LoadTranslationFiles();
@@ -59,7 +59,7 @@ public OnPluginStart()
 	HookEvent("player_spawn", Event_PlayerSpawn, EventHookMode_Post);
 }
 
-public OnPluginEnd()
+public void OnPluginEnd()
 {
 	if (LibraryExists("ac_core")) //alibi check
 	{
@@ -67,7 +67,7 @@ public OnPluginEnd()
 	}
 }
 
-public OnLibraryAdded(const String:name[])
+public void OnLibraryAdded(const char[] name)
 {
 	if (StrEqual(name, "ac_war_sys"))
 	{
@@ -75,7 +75,7 @@ public OnLibraryAdded(const String:name[])
 	}
 }
 
-public OnLibraryRemoved(const String:name[])
+public void OnLibraryRemoved(const char[] name)
 {
 	if (StrEqual(name, "ac_war_sys"))
 	{
@@ -83,12 +83,12 @@ public OnLibraryRemoved(const String:name[])
 	}
 }
 
-public ac_OnCoreComTagChanged(const String:tag[])
+public void ac_OnCoreComTagChanged(const char[] tag)
 {
 	Format(Tag, sizeof(Tag), "%s", tag);
 }
 
-public OnClientPutInServer(client)
+public void OnClientPutInServer(client)
 {
 	SDKHook(client, SDKHook_OnTakeDamage, SDKH_OnTakeDamage);
 }

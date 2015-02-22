@@ -16,7 +16,7 @@
 **
 */
 
-//#define DEBUG
+#define DEBUG
 
 /* γ = dev : α = canditae for control testing : β = proving ground/release candidate : λ = Final stable/RTM */
 #define PLUGIN_VERSION "1.03λ"
@@ -26,13 +26,21 @@
 #include <cstrike>
 #include <sdkhooks>
 
+typeset WarStart
+{
+	function void ();
+	function void (int index);
+	function void (int index, int maxrounds, int maxtime);
+};
+typeset WarEnd
+{
+	function void ();
+	function void (int index);
+};
+typedef WarFreezeTimeStart = function void (int time);
+typedef WarFreezeTimeEnd = function void ();
+
 #include "AeroControler\\aerocontroler_core_interface.inc" //interface to the core
-funcenum WarStart
-{ public(), public(_:index), public(_:index, _:maxrounds, _:maxtime) }
-funcenum WarEnd
-{ public(), public(_:index) }
-functag public WarFreezeTimeStart(_:time);
-functag public WarFreezeTimeEnd();
 
 #include "AeroControler\\SharedPluginBase\\AC_SharedPluginBase.inc"
 
@@ -43,7 +51,7 @@ functag public WarFreezeTimeEnd();
 #include "AeroControler\\War_Sys\\Controler\\AC_WAR_Cmds.inc"
 #include "AeroControler\\War_Sys\\Controler\\AC_WAR_Configs.inc"
 
-public Plugin:myinfo = 
+public Plugin myinfo = 
 {
 	name = "Aero Controler - Extension: WAR Base Control System",
 	author = "_AeonOne_",
@@ -52,7 +60,7 @@ public Plugin:myinfo =
 	url = "Julien.Kluge@gmail.com"
 };
 
-public OnPluginStart()
+public void OnPluginStart()
 {
 	DetectGameMod();
 	LoadStaticConfig();
@@ -60,7 +68,7 @@ public OnPluginStart()
 	
 	ac_getCoreComTag(Tag, sizeof(Tag));
 	ExtensionEntryIndex = ac_registerPluginExtension("Aero WAR Base Control System", "_AeonOne_", PLUGIN_VERSION);
-	ac_registerCMDMenuBuildForward(buildCMDMenuForward:AddWarCmdToCmdMenu);
+	ac_registerCMDMenuBuildForward(view_as<buildCMDMenuForward>AddWarCmdToCmdMenu);
 	
 	if (Alw_warVoteCmd) { RegMultipleConsoleCmd(Str_WarVoteCmd, Cmd_VoteWar, "Vote for a war"); }
 	
@@ -72,7 +80,7 @@ public OnPluginStart()
 	HookEvent("player_spawn", Event_PlayerSpawn, EventHookMode_Post);
 }
 
-public OnPluginEnd()
+public void OnPluginEnd()
 {
 	if (LibraryExists("ac_core")) //alibi check
 	{
@@ -80,31 +88,31 @@ public OnPluginEnd()
 	}
 }
 
-public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
+public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, err_max)
 {
-	CreateNative("ac_war_RegWar", NativeCall:AC_Native_RegWar);
-	CreateNative("ac_war_UnRegWar", NativeCall:AC_Native_UnRegWar);
-	CreateNative("ac_war_EndWar", NativeCall:AC_Native_EndWar);
+	CreateNative("ac_war_RegWar", view_as<NativeCall>AC_Native_RegWar);
+	CreateNative("ac_war_UnRegWar", view_as<NativeCall>AC_Native_UnRegWar);
+	CreateNative("ac_war_EndWar", view_as<NativeCall>AC_Native_EndWar);
 	RegPluginLibrary("ac_war_sys");
 	return APLRes_Success;
 }
 
-public OnMapStart()
+public void OnMapStart()
 {
 	g_Offset_CollisionGroup = FindSendPropOffs("CBaseEntity", "m_CollisionGroup");
 }
 
-public ac_OnCoreComTagChanged(const String:tag[])
+public void ac_OnCoreComTagChanged(const char[] tag)
 {
 	Format(Tag, sizeof(Tag), "%s", tag);
 }
 
-public OnClientPutInServer(client)
+public void OnClientPutInServer(client)
 {
 	SDKHook(client, SDKHook_OnTakeDamage, SDKH_OnTakeDamage);
 }
 
-public OnClientDisconnect_Post(client)
+public void OnClientDisconnect_Post(client)
 {
 	HasVotedWar[client] = false;
 }

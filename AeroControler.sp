@@ -14,9 +14,9 @@
 ** This license is a voluntary license. You don't have to observe it.
 **
 */
-//#define DEBUG
+#define DEBUG
 
-#define PLUGIN_VERSION_DEF "1.10λ" //RTM
+#define PLUGIN_VERSION_DEF "1.11λ" //RTM
 #define PLUGIN_AUTHOR "Λeon"
 
 /*
@@ -44,6 +44,7 @@
 ** |15th Februrary 2014	|1.10λ			|Storesystem+Skillforcesystem ready								|4th februrary 2014 - Storesystem ready
 ** |22th Februrary 2014	|1.10λ			|First Release													|~10500 loc
 ** |26th Februrary 2014	|1.10.000129λ	|bug & error fixed version - added some misc things			|Buildnumber: 000129
+** |21th Februrary 2015	|1.11			|Transitional Syntax is fully supported by all scripts		|
 ** _________________________________________________________________________Done Tasks_________________________________________________________________________
 ** 
 ** 
@@ -51,7 +52,7 @@
 ** 
 ** ________________________________________________________________________Planed Tasks________________________________________________________________________
 ** |version	|description
-** |1.11		|seperate modules (at least mute system)
+** |1.12		|seperate modules (at least mute system)
 ** |1.15		|game cmds
 ** |1.20		|new WAR's
 ** |1.30		|CT Ban
@@ -104,7 +105,7 @@
 /* 3rdParty::includes */
 
 
-public Plugin:myinfo = 
+public Plugin myinfo = 
 {
 	name = "Aero Controler",
 	author = PLUGIN_AUTHOR,
@@ -113,11 +114,11 @@ public Plugin:myinfo =
 	url = "Julien.Kluge@gmail.com"
 };
 
-public OnPluginStart()
+public void OnPluginStart()
 {
 	CreateConVar("ac_version", PLUGIN_VERSION, "Version of the AeroControler",  FCVAR_PLUGIN | FCVAR_SPONLY | FCVAR_REPLICATED | FCVAR_NOTIFY | FCVAR_DONTRECORD);
 
-	LoadVersionNumber();	
+	LoadVersionNumber();
 	DetectGameMod();
 	InitCVarSettings();
 	CreateStaticMenus();
@@ -155,12 +156,12 @@ public OnPluginStart()
 	if (announce_Timer == INVALID_HANDLE)
 	{ announce_Timer = CreateTimer(announce_delay, timer_Announce, INVALID_HANDLE, TIMER_REPEAT); }
 	
-	for (new i = 0; i < (MAXPLAYERS + 1); i++) { ResetClientVars(i); } //init my client variables
+	for (int i = 0; i < (MAXPLAYERS + 1); i++) { ResetClientVars(i); } //init my client variables
 	
 	AutoExecConfig(true, "aerocontroler");
 }
 
-public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
+public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, err_max)
 {
 	MarkNativeAsOptional("Steam_SetGameDescription"); //the include didn't do it, so we have to...
 	extensionPlugins = CreateArray(64, 0);
@@ -170,11 +171,11 @@ public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 	return APLRes_Success;
 }
 
-public OnAllPluginsLoaded()
+public void OnAllPluginsLoaded()
 {
 	if (GunSafetyState == 0)
 	{
-		new bool:gunSafetyWillWork = false;
+		bool gunSafetyWillWork = false;
 		if (CanTestFeatures())
 		{
 			if (GetFeatureStatus(FeatureType_Capability, FEATURECAP_COMMANDLISTENER) == FeatureStatus_Available)
@@ -192,17 +193,17 @@ public OnAllPluginsLoaded()
 	}
 }
 
-public OnLibraryAdded(const String:name[])
+public void OnLibraryAdded(const char[] name)
 {
 	MuteSys_LibraryAdded_Detour(name);
 }
 
-public OnLibraryRemoved(const String:name[])
+public void OnLibraryRemoved(const char[] name)
 {
 	MuteSys_LibraryRemoved_Detour(name);
 }
 
-public OnConfigsExecuted()
+public void OnConfigsExecuted()
 {
 	if (strlen(gameDescription) > 0)
 	{
@@ -224,7 +225,7 @@ public OnConfigsExecuted()
 	}
 }
 
-public OnMapStart()
+public void OnMapStart()
 {
 	LoadDiceProbabilities();
 	InitMapStart();
@@ -232,26 +233,26 @@ public OnMapStart()
 	CreateTimer(1.0, timer_NotifyOfStates, INVALID_HANDLE, TIMER_FLAG_NO_MAPCHANGE | TIMER_REPEAT);
 }
 
-public OnClientPutInServer(client)
+public void OnClientPutInServer(int client)
 {
 	SDKHook(client, SDKHook_WeaponCanUse, SDKH_OnCanUseWeapon);
 	SDKHook(client, SDKHook_OnTakeDamage, SDKH_OnTakeDamage);
 }
 
-public OnClientDisconnect_Post(client)
+public void OnClientDisconnect_Post(int client)
 {
 	ResetClientVars(client); //yearh, i lied when i said that I will place this in the connect-forward xD
 	UpdatePlayerCount();
 }
 
-public OnClientPostAdminCheck(client)
+public void OnClientPostAdminCheck(int client)
 {
 	/*if (FC_FilterCountries)
 	{ FilterCountry_Filter(client); } TODO: BUGGY*/
 	MuteSys_LoadClient(client);
 }
 
-public OnGameFrame()
+public void OnGameFrame()
 {
 	Core_GameFrame_Detour();
 	Diced_GameFrame_Detour();

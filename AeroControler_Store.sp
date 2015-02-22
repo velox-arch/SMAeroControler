@@ -16,7 +16,7 @@
 **
 */
 
-//#define DEBUG
+#define DEBUG
 
 /* γ = dev : α = canditae for control testing : β = proving ground/release candidate : λ = Final stable/RTM */
 #define PLUGIN_VERSION "1.00λ"
@@ -46,7 +46,7 @@
 #include "AeroControler\\Store_Sys\\AC_STORE_FeatureStocks.inc"
 /* plugin::includes */
 
-public Plugin:myinfo = 
+public Plugin myinfo = 
 {
 	name = "Aero Controler Store",
 	author = PLUGIN_AUTHOR,
@@ -55,7 +55,7 @@ public Plugin:myinfo =
 	url = "Julien.Kluge@gmail.com"
 };
 
-public OnPluginStart()
+public void OnPluginStart()
 {
 	DetectGameMod();
 	LoadStaticConfig();
@@ -64,7 +64,7 @@ public OnPluginStart()
 	
 	ac_getCoreComTag(Tag, sizeof(Tag));
 	ExtensionEntryIndex = ac_registerPluginExtension("Aero Store System", "_AeonOne_", PLUGIN_VERSION);
-	ac_registerCMDMenuBuildForward(buildCMDMenuForward:AddStoreCmdsToCmdMenu);
+	ac_registerCMDMenuBuildForward(view_as<buildCMDMenuForward>AddStoreCmdsToCmdMenu);
 	
 	HookEvent("round_end", Event_RoundEnd, EventHookMode_Post);
 	HookEvent("player_spawn", Event_PlayerSpawn, EventHookMode_Post);
@@ -78,7 +78,7 @@ public OnPluginStart()
 	if (Cmd_SFC) { RegMultipleConsoleCmd(Cmd_Str_SFC, Cmd_SFChat, "Chat with your skillforce"); }
 }
 
-public OnPluginEnd()
+public void OnPluginEnd()
 {
 	if (LibraryExists("ac_core"))
 	{
@@ -86,34 +86,34 @@ public OnPluginEnd()
 	}
 }
 
-public OnMapStart()
+public void OnMapStart()
 {
 	g_BeamSprite = PrecacheModel("materials/sprites/laserbeam.vmt");
 	g_HaloSprite = PrecacheModel("materials/sprites/glow01.vmt");
 	skillTimer = CreateTimer(2.0, timer_CheckSkill, INVALID_HANDLE, TIMER_REPEAT);
 }
 
-public OnMapEnd()
+public void OnMapEnd()
 {
 	CloseHandle(skillTimer);
 }
 
-public OnClientPutInServer(client)
+public void OnClientPutInServer(client)
 {
 	SDKHook(client, SDKHook_OnTakeDamage, SDKH_OnTakeDamage);
 }
 
-public ac_OnCoreStateChanged(bool:indicator)
+public void ac_OnCoreStateChanged(bool indicator)
 {
 	InWork = indicator;
 }
 
-public ac_OnCoreComTagChanged(const String:tag[])
+public void ac_OnCoreComTagChanged(const char[] tag)
 {
 	Format(Tag, sizeof(Tag), "%s", tag);
 }
 
-public OnClientAuthorized(client, const String:auth[])
+public void OnClientAuthorized(client, const char[] auth)
 {
 	#if defined DEBUG
 	LoadClient(client, auth);
@@ -123,21 +123,21 @@ public OnClientAuthorized(client, const String:auth[])
 	#endif
 }
 
-public OnClientDisconnect(client)
+public void OnClientDisconnect(client)
 {
 	if (IsClientValid(client))
 	{ UpdateClientAsync(client); }
 }
 
-public Action:OnClientSayCommand(client, const String:command[], const String:sArgs[])
+public Action OnClientSayCommand(client, const char[] command, const char[] sArgs)
 {
 	if (c_InSFNameChooseProcess[client])
 	{
 		if (StrEqual(command, "say", false))
 		{
 			c_InSFNameChooseProcess[client] = false;
-			decl String:name[32];
-			decl String:argument[64];
+			char name[32];
+			char argument[64];
 			Format(argument, sizeof(argument), "%s", sArgs);
 			StripQuotes(argument);
 			WhiteStripIllegalCharacters(argument);
@@ -145,10 +145,10 @@ public Action:OnClientSayCommand(client, const String:command[], const String:sA
 			SQL_EscapeString(db, argument, name, sizeof(name));
 			if (strlen(name) > 1)
 			{
-				new Handle:pack = CreateDataPack();
+				Handle pack = CreateDataPack();
 				WritePackCell(pack, GetClientUserId(client));
 				WritePackString(pack, name);
-				decl String:query[255];
+				char query[255];
 				Format(query, sizeof(query), "SELECT id FROM `%s` WHERE name='%s'", sfTableName, name);
 				SQL_TQuery(db, TSQL_CheckUniqueSFName, query, pack);
 			}

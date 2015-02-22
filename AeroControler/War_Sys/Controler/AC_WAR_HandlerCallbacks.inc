@@ -14,7 +14,7 @@
 **
 */
 
-public Action:timer_ReAllowVoting(Handle:timer)
+public Action timer_ReAllowVoting(Handle timer)
 {
 	ReVoteTimer = INVALID_HANDLE;
 	VoteIsOpen = true;
@@ -22,21 +22,21 @@ public Action:timer_ReAllowVoting(Handle:timer)
 	return Plugin_Stop;
 }
 
-public Action:timer_ForceWarEnd(Handle:timer)
+public Action timer_ForceWarEnd(Handle timer)
 {
 	WarMaxTimer = INVALID_HANDLE;
 	ForceEndWar();
 	return Plugin_Stop;
 }
 
-public Action:timer_EndFreezeTime(Handle:timer)
+public Action timer_EndFreezeTime(Handle timer)
 {
 	WarFTCount--;
 	if (WarFTCount == 0)
 	{
 		WarFreezeTimer = INVALID_HANDLE;
 		WarInFreezeTime = false;
-		for (new i = 1; i <= MaxClients; i++)
+		for (int i = 1; i <= MaxClients; i++)
 		{
 			if (IsClientValid(i))
 			{
@@ -51,7 +51,7 @@ public Action:timer_EndFreezeTime(Handle:timer)
 				}
 			}
 		}
-		if (War_FT_End[WarIndex] != WarFreezeTimeEnd:INVALID_FUNCTION)
+		if (War_FT_End[WarIndex] != view_as<WarFreezeTimeEnd>INVALID_FUNCTION)
 		{
 			Call_StartFunction(War_Plugin[WarIndex], War_FT_End[WarIndex]);
 			Call_Finish();
@@ -61,7 +61,7 @@ public Action:timer_EndFreezeTime(Handle:timer)
 	}
 	else
 	{
-		for (new i = 1; i <= MaxClients; i++)
+		for (int i = 1; i <= MaxClients; i++)
 		{
 			if (IsClientValid(i))
 			{
@@ -84,7 +84,7 @@ public Action:timer_EndFreezeTime(Handle:timer)
 **
 */
 
-public voteHandler_WarKindVote(Handle:menu, MenuAction:action, param1, param2)
+public int voteHandler_WarKindVote(Handle menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_End)
 	{
@@ -92,9 +92,9 @@ public voteHandler_WarKindVote(Handle:menu, MenuAction:action, param1, param2)
 	}
 	else if (action == MenuAction_VoteEnd)
 	{
-		decl String:info[32];
+		char info[32];
 		GetMenuItem(menu, param1, info, sizeof(info));
-		new index = StringToInt(info);
+		int index = StringToInt(info);
 		if (index >= 0 && index < MAX_WARS)
 		{ StartWar(index); }
 	}
@@ -112,7 +112,7 @@ public voteHandler_WarKindVote(Handle:menu, MenuAction:action, param1, param2)
 **
 */
 
-public Action:SDKH_OnTakeDamage(victim, &attacker, &inflictor, &Float:damage, &damagetype)
+public Action SDKH_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype)
 {
 	if (WarOnline)
 	{
@@ -137,10 +137,10 @@ public Action:SDKH_OnTakeDamage(victim, &attacker, &inflictor, &Float:damage, &d
 **
 */
 
-public _:AC_Native_RegWar(Handle:plugin, numParams)
+public int AC_Native_RegWar(Handle plugin, int numParams)
 {
-	new index = -1;
-	for (new i = 0; i < MAX_WARS; i++)
+	int index = -1;
+	for (int i = 0; i < MAX_WARS; i++)
 	{
 		if (!War_Registered[i])
 		{ index = i; break; }
@@ -150,7 +150,7 @@ public _:AC_Native_RegWar(Handle:plugin, numParams)
 		War_StartFunc[index] = GetNativeCell(1);
 		War_EndFunc[index] = GetNativeCell(2);
 		GetNativeString(3, War_Name[index], MAX_WAR_NAME);
-		War_HasFreezeTime[index] = bool:GetNativeCell(4);
+		War_HasFreezeTime[index] = view_as<bool>GetNativeCell(4);
 		if (War_HasFreezeTime[index])
 		{
 			War_FT_Start[index] = GetNativeCell(5);
@@ -162,9 +162,9 @@ public _:AC_Native_RegWar(Handle:plugin, numParams)
 	}
 	return index;
 }
-public AC_Native_UnRegWar(Handle:plugin, numParams)
+public void AC_Native_UnRegWar(Handle plugin, int numParams)
 {
-	new index = GetNativeCell(1);
+	int index = GetNativeCell(1);
 	if (index >= 0 && index < MAX_WARS)
 	{
 		if (War_Registered[index])
@@ -175,9 +175,9 @@ public AC_Native_UnRegWar(Handle:plugin, numParams)
 	}
 }
 
-public AC_Native_EndWar(Handle:plugin, numParams)
+public void AC_Native_EndWar(Handle plugin, int numParams)
 {
-	EndWar(bool:GetNativeCell(1));
+	EndWar(view_as<bool>GetNativeCell(1));
 }
 
 /*
@@ -192,12 +192,12 @@ public AC_Native_EndWar(Handle:plugin, numParams)
 **
 */
 
-public AddWarCmdToCmdMenu(client, Handle:menu)
+public void AddWarCmdToCmdMenu(int client, Handle menu)
 {
 	if (Alw_warVoteCmd)
 	{
-		decl String:cmd_string[32];
-		decl String:itemString[64];
+		char cmd_string[32];
+		char itemString[64];
 		GetFirstDelimitedCmd(Str_WarVoteCmd, cmd_string);
 		Format(itemString, sizeof(itemString), "%s - %T", PStr_WarVoteCmd, "war_cmd_wvote", client);
 		AddMenuItem(menu, cmd_string, itemString, (WarOnline || WarCount == 0) ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
